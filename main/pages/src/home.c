@@ -2,7 +2,6 @@
 #include "display_driver.h"
 #include "mode.h"
 #include "globals.h"
-#include "led_driver.h"
 #include "screen_manager.h"
 
 #include "esp_log.h"

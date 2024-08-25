@@ -2,7 +2,6 @@
 #include "display_driver.h"
 #include "mode.h"
 #include "globals.h"
-#include "led_driver.h"
 #include "screen_manager.h"
 
 #include "esp_log.h"
@@ -24,6 +23,7 @@ static void list_handler(lv_event_t * e){
 
 static void up_handler(lv_event_t * e){
     lv_event_code_t code = lv_event_get_code(e);
+    /*
     if(code == LV_EVENT_CLICKED) {
         uint32_t index = get_mode_index();
         uint32_t amt = get_mode_amount();
@@ -35,11 +35,12 @@ static void up_handler(lv_event_t * e){
 
         set_mode_index(index);
     }
-    
+    */
 }
 
 static void down_handler(lv_event_t * e){
     lv_event_code_t code = lv_event_get_code(e);
+    /*
     if(code == LV_EVENT_CLICKED) {
         uint32_t index = get_mode_index();
         uint32_t amt = get_mode_amount();
@@ -52,7 +53,7 @@ static void down_handler(lv_event_t * e){
 
         set_mode_index(index);
     }
-    
+    */
 }
 
 lv_obj_t* create_mode(void){

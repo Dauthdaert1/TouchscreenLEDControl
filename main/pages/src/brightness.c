@@ -2,7 +2,6 @@
 #include "display_driver.h"
 #include "brightness.h"
 #include "globals.h"
-#include "led_driver.h"
 #include "screen_manager.h"
 #include "mode.h"
 
@@ -13,22 +12,22 @@ static void power_handler(lv_event_t * e){
     if(code == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t * btn = lv_event_get_target(e);
         if(lv_obj_get_state(btn) & LV_STATE_CHECKED){
-            set_strip_power(true);
+            //set_strip_power(true);
             lv_obj_clear_flag(e->user_data, LV_OBJ_FLAG_HIDDEN);
         }else{
-            set_strip_power(false);
+            //set_strip_power(false);
             lv_obj_add_flag(e->user_data, LV_OBJ_FLAG_HIDDEN);
         }
-        strip_timer_handler();
+        //strip_timer_handler();
     }
 }
 
 static void value_changed_event_cb(lv_event_t * e)
 {
-    lv_obj_t * arc = lv_event_get_target(e);
-    uint8_t brightness = lv_arc_get_value(arc);
-    set_strip_brightness(brightness);
-    strip_timer_handler();
+    //lv_obj_t * arc = lv_event_get_target(e);
+    //uint8_t brightness = lv_arc_get_value(arc);
+    //set_strip_brightness(brightness);
+    //strip_timer_handler();
 }
 
 static void settings_handler(lv_event_t * e){
@@ -58,10 +57,12 @@ lv_obj_t* create_brightness(void){
     lv_arc_set_range(arc, 2, 255);
     lv_obj_center(arc);
     lv_obj_add_event_cb(arc, value_changed_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    /*
     if(!get_strip_power()){
         lv_obj_add_flag(arc, LV_OBJ_FLAG_HIDDEN);
     }
-    
+    */
 
     static lv_style_t btn_style_off;
     lv_style_init(&btn_style_off);
