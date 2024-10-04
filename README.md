@@ -1,69 +1,43 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C6 | ESP32-H2 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | -------- | -------- |
+# Touchscreen LED Control
+## Author: Dauthdaert1
+## High Level Description
+This is a project to control an LED strip using a touch LCD display. The LCD display has it's own microcontroller plugged in via USB so that it can be placed easily where the user wants it. The LED strip is controlled by it's own microcontroller as well. In the future, they will communicate with each other via bluetooth, but this is currently not implemented as I just split the project.
 
-# Blink Example
+I have plans to make the system controllable by a mobile app but that's a while off.
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+---
+## Hardware Configurations
+LCD display module hardware:
+* ESP32-WROOM-32D
+* Waveshare 1.28inch Round LCD Display Module with Touch Panel (https://a.co/d/ahuuevx)
+* 2x Pullup Resisor for I2C (4.7kΩ to 10kΩ)
 
-This example demonstrates how to blink a LED by using the GPIO driver or using the [led_strip](https://components.espressif.com/component/espressif/led_strip) library if the LED is addressable e.g. [WS2812](https://cdn-shop.adafruit.com/datasheets/WS2812B.pdf). The `led_strip` library is installed via [component manager](main/idf_component.yml).
+![LCD Module Schematic PNG](ReadMeAssets/LCD_Module.png?raw=true "LCD Module")
 
-## How to Use Example
+LED driver hardware:
+* ESP32-WROOM-32D
+* WS2812B 5V LED strip
+* SN74AHCT125N Logic Level Shifter (For 3.3V microcontroller to drive 5V LED strip)
+* 5V Power Supply (Amperage Depends on Amount of LEDs to drive, ideally ~60mA per LED)
+* 1000 µF Electrolytic Capacitor
+* 220Ω Resistor (For Current Limiting)
 
-Before project configuration and build, be sure to set the correct chip target using `idf.py set-target <chip_name>`.
+![LED Module Schematic PNG](ReadMeAssets/LED_Module.png?raw=true "LED Module")
 
-### Hardware Required
+**Note:** *Schematics are my pin configuration, ESP lets you use almost any pins so they just need to be reconfigured in .h files to different pins if wired differently*
 
-* A development board with normal LED or addressable LED on-board (e.g., ESP32-S3-DevKitC, ESP32-C6-DevKitC etc.)
-* A USB cable for Power supply and programming
+## Software Configurations
+### IDE:
+The environment this is built for is ESP-IDF in VSCode. It includes setup sdkconfig files for this project. If changing environment, be careful to replicate configurations or project may not work properly.
 
-See [Development Boards](https://www.espressif.com/en/products/devkits) for more information about it.
+### Dependencies:
+* LVGL
+* espressif__led_strip
 
-### Configure the Project
+## License
 
-Open the project configuration menu (`idf.py menuconfig`).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-In the `Example Configuration` menu:
-
-* Select the LED type in the `Blink LED type` option.
-  * Use `GPIO` for regular LED
-  * Use `LED strip` for addressable LED
-* If the LED type is `LED strip`, select the backend peripheral
-  * `RMT` is only available for ESP targets with RMT peripheral supported
-  * `SPI` is available for all ESP targets
-* Set the GPIO number used for the signal in the `Blink GPIO number` option.
-* Set the blinking period in the `Blink period in ms` option.
-
-### Build and Flash
-
-Run `idf.py -p PORT flash monitor` to build, flash and monitor the project.
-
-(To exit the serial monitor, type ``Ctrl-]``.)
-
-See the [Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for full steps to configure and use ESP-IDF to build projects.
-
-## Example Output
-
-As you run the example, you will see the LED blinking, according to the previously defined period. For the addressable LED, you can also change the LED color by setting the `led_strip_set_pixel(led_strip, 0, 16, 16, 16);` (LED Strip, Pixel Number, Red, Green, Blue) with values from 0 to 255 in the [source file](main/blink_example_main.c).
-
-```text
-I (315) example: Example configured to blink addressable LED!
-I (325) example: Turning the LED OFF!
-I (1325) example: Turning the LED ON!
-I (2325) example: Turning the LED OFF!
-I (3325) example: Turning the LED ON!
-I (4325) example: Turning the LED OFF!
-I (5325) example: Turning the LED ON!
-I (6325) example: Turning the LED OFF!
-I (7325) example: Turning the LED ON!
-I (8325) example: Turning the LED OFF!
-```
-
-Note: The color order could be different according to the LED model.
-
-The pixel number indicates the pixel position in the LED strip. For a single LED, use 0.
-
-## Troubleshooting
-
-* If the LED isn't blinking, check the GPIO or the LED type selection in the `Example Configuration` menu.
-
-For any technical queries, please open an [issue](https://github.com/espressif/esp-idf/issues) on GitHub. We will get back to you soon.
+This project includes the following third-party libraries:
+- LVGL, licensed under the MIT License.
+- espressif__led_strip, licensed under the Apache License 2.0.
