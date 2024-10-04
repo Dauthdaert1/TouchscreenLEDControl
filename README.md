@@ -12,7 +12,7 @@ LCD display module hardware:
 * Waveshare 1.28inch Round LCD Display Module with Touch Panel (https://a.co/d/ahuuevx)
 * 2x Pullup Resisor for I2C (4.7kΩ to 10kΩ)
 
-![LCD Module Schematic PNG](ReadMeAssets/LCD_Module.png?raw=true "LCD Module")
+![LCD Module Schematic PNG](assets/LCD_Module.png?raw=true "LCD Module")
 
 LED driver hardware:
 * ESP32-WROOM-32D
@@ -22,7 +22,7 @@ LED driver hardware:
 * 1000 µF Electrolytic Capacitor
 * 220Ω Resistor (For Current Limiting)
 
-![LED Module Schematic PNG](ReadMeAssets/LED_Module.png?raw=true "LED Module")
+![LED Module Schematic PNG](assets/LED_Module.png?raw=true "LED Module")
 
 **Note:** *Schematics are my pin configuration, ESP lets you use almost any pins so they just need to be reconfigured in .h files to different pins if wired differently*
 
