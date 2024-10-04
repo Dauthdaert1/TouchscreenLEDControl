@@ -34,6 +34,11 @@ The environment this is built for is ESP-IDF in VSCode. It includes setup sdkcon
 * LVGL
 * espressif__led_strip
 
+## Subproject READMEs
+* [UI Controller](/ui_controller/README.md)
+* [LED Controller](/led_controller/README.md)
+
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
