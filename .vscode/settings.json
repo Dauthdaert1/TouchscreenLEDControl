@@ -55,6 +55,8 @@
         "esp_timer.h": "c",
         "numbers": "c",
         "led_driver.h": "c",
-        "screen_manager.h": "c"
+        "screen_manager.h": "c",
+        "brightness.h": "c",
+        "esp_http_client.h": "c"
     }
 }

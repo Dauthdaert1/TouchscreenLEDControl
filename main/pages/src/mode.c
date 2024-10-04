@@ -22,7 +22,7 @@ static void list_handler(lv_event_t * e){
 }
 
 static void up_handler(lv_event_t * e){
-    lv_event_code_t code = lv_event_get_code(e);
+    //lv_event_code_t code = lv_event_get_code(e);
     /*
     if(code == LV_EVENT_CLICKED) {
         uint32_t index = get_mode_index();
@@ -39,7 +39,7 @@ static void up_handler(lv_event_t * e){
 }
 
 static void down_handler(lv_event_t * e){
-    lv_event_code_t code = lv_event_get_code(e);
+    //lv_event_code_t code = lv_event_get_code(e);
     /*
     if(code == LV_EVENT_CLICKED) {
         uint32_t index = get_mode_index();
@@ -74,7 +74,7 @@ lv_obj_t* create_mode(void){
     static lv_style_t text_style;
     lv_style_init(&text_style);
     lv_style_set_text_color(&text_style, lv_color_hex(0xFFFFFF));
-    lv_style_set_text_font(&text_style, &lv_font_montserrat_48);
+    lv_style_set_text_font(&text_style, &montserrat_48_cut);
 
     /* Back Button */ 
     lv_obj_t * btn1 = lv_button_create(page);

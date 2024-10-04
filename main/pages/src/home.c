@@ -3,8 +3,15 @@
 #include "mode.h"
 #include "globals.h"
 #include "screen_manager.h"
+#include "home.h"
 
 #include "esp_log.h"
+
+static weather_labels_t weather_labels;
+
+weather_labels_t* get_weather_labels(){
+    return &weather_labels;
+}
 
 static void snap_event_handler(lv_event_t * e) {
     lv_obj_t * obj = lv_event_get_target(e);
@@ -26,14 +33,6 @@ static void snap_event_handler(lv_event_t * e) {
     }
     
     lv_obj_scroll_to(obj, end_x, 0, LV_ANIM_ON);
-
-    /* lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, obj);
-    lv_anim_set_values(&a, current_x, end_x);
-    lv_anim_set_time(&a, 300);  // Animation duration in milliseconds
-    lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_);
-    lv_anim_start(&a); */
 }
 
 lv_obj_t* create_home(void){
@@ -58,9 +57,10 @@ lv_obj_t* create_home(void){
     static lv_style_t clock_style;
     lv_style_init(&clock_style);
     lv_style_set_text_color(&clock_style, lv_color_hex(0xa5b3fa));
-    lv_style_set_text_font(&clock_style, &lv_font_montserrat_36);
+    lv_style_set_text_font(&clock_style, &montserrat_36_cut);
 
     lv_obj_t * label1 = lv_label_create(page);
+    weather_labels.clock = label1;
     lv_label_set_text(label1, "12:34");
     lv_obj_add_style(label1, &clock_style, 0);
     lv_obj_align(label1, LV_ALIGN_CENTER, -10, 85);
@@ -73,11 +73,13 @@ lv_obj_t* create_home(void){
     lv_style_set_text_font(&seconds_style, &lv_font_montserrat_14);
 
     lv_obj_t * label2 = lv_label_create(page);
+    weather_labels.seconds = label2;
     lv_label_set_text(label2, "56");
     lv_obj_add_style(label2, &seconds_style, 0);
     lv_obj_align(label2, LV_ALIGN_CENTER, 50, 75);
 
     lv_obj_t * label3 = lv_label_create(page);
+    weather_labels.am_pm = label3;
     lv_label_set_text(label3, "AM");
     lv_obj_add_style(label3, &seconds_style, 0);
     lv_obj_align(label3, LV_ALIGN_CENTER, 53, 90);
@@ -127,6 +129,7 @@ lv_obj_t* create_home(void){
     lv_style_set_anim(&description_style, &animation_template);
 
     lv_obj_t * label4 = lv_label_create(page);
+    weather_labels.scrolling_text = label4;
     lv_label_set_long_mode(label4, LV_LABEL_LONG_SCROLL_CIRCULAR);
     lv_obj_set_width(label4, 180);
     lv_label_set_text(label4, "Expect a day of partly cloudy with rain");
@@ -137,9 +140,10 @@ lv_obj_t* create_home(void){
     static lv_style_t temperature_style;
     lv_style_init(&temperature_style);
     lv_style_set_text_color(&temperature_style, lv_color_hex(0xFFFFFF));
-    lv_style_set_text_font(&temperature_style, &lv_font_montserrat_48);
+    lv_style_set_text_font(&temperature_style, &montserrat_48_cut);
 
     lv_obj_t * label5 = lv_label_create(page);
+    weather_labels.temp = label5;
     lv_label_set_text(label5, "69");
     lv_obj_add_style(label5, &temperature_style, 0);
     lv_obj_align(label5, LV_ALIGN_CENTER, -40, -75);
@@ -158,7 +162,7 @@ lv_obj_t* create_home(void){
     static lv_style_t degree2_style;
     lv_style_init(&degree2_style);
     lv_style_set_text_color(&degree2_style, lv_color_hex(0xa5b3fa));
-    lv_style_set_text_font(&degree2_style, &lv_font_montserrat_36);
+    lv_style_set_text_font(&degree2_style, &montserrat_36_cut);
 
     lv_obj_t * label7 = lv_label_create(page);
     lv_label_set_text(label7, ".");
@@ -178,6 +182,7 @@ lv_obj_t* create_home(void){
     lv_obj_align(label9, LV_ALIGN_CENTER, 20, -85);
 
     lv_obj_t * label10 = lv_label_create(page);
+    weather_labels.high = label10;
     lv_label_set_text(label10, "80");
     lv_obj_add_style(label10, &degree_style, 0);
     lv_obj_align(label10, LV_ALIGN_CENTER, 60, -85);
@@ -189,6 +194,7 @@ lv_obj_t* create_home(void){
     lv_obj_align(label11, LV_ALIGN_CENTER, 23, -65);
 
     lv_obj_t * label12 = lv_label_create(page);
+    weather_labels.low = label12;
     lv_label_set_text(label12, "50");
     lv_obj_add_style(label12, &degree_style, 0);
     lv_obj_align(label12, LV_ALIGN_CENTER, 60, -65);
@@ -216,13 +222,13 @@ lv_obj_t* create_home(void){
     lv_obj_set_style_pad_left(cont_row, 20, 0);
     lv_obj_set_style_pad_right(cont_row, 20, 0);
     lv_obj_set_scrollbar_mode(cont_row, LV_SCROLLBAR_MODE_OFF);
-    //lv_obj_set_scroll_snap_x(cont_row, LV_SCROLL_SNAP_START);
     lv_obj_add_event_cb(cont_row, snap_event_handler, LV_EVENT_SCROLL_END, NULL);
+
+    //TODO: Try to make boxes into same type of shape instead of each it's own
 
     /* HUM Box */
     lv_obj_t *box1 = lv_obj_create(cont_row);
     lv_obj_set_size(box1, 60, 60);
-    //lv_obj_align(box1, LV_ALIGN_LEFT_MID, 70*0, 0);
     lv_obj_set_style_bg_color(box1, lv_color_hex(0x22304d), 0);
     lv_obj_set_style_border_opa(box1, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(box1, LV_OBJ_FLAG_SCROLLABLE);
@@ -235,6 +241,7 @@ lv_obj_t* create_home(void){
 
     /* HUM Stat */
     lv_obj_t * label14 = lv_label_create(box1);
+    weather_labels.humidity = label14;
     lv_label_set_text(label14, "80%");
     lv_obj_add_style(label14, &stat_style, 0);
     lv_obj_align(label14, LV_ALIGN_CENTER, 0, 10);
@@ -242,7 +249,6 @@ lv_obj_t* create_home(void){
     /* FEELS Box */
     lv_obj_t *box2 = lv_obj_create(cont_row);
     lv_obj_set_size(box2, 60, 60);
-    //lv_obj_align(box2, LV_ALIGN_LEFT_MID, 70*1, 0);
     lv_obj_set_style_bg_color(box2, lv_color_hex(0x22304d), 0);
     lv_obj_set_style_border_opa(box2, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(box2, LV_OBJ_FLAG_SCROLLABLE);
@@ -255,6 +261,7 @@ lv_obj_t* create_home(void){
 
     /* FEELS Stat */
     lv_obj_t * label16 = lv_label_create(box2);
+    weather_labels.feels = label16;
     lv_label_set_text(label16, "72");
     lv_obj_add_style(label16, &stat_style, 0);
     lv_obj_align(label16, LV_ALIGN_CENTER, 0, 10);
@@ -262,7 +269,6 @@ lv_obj_t* create_home(void){
     /* DEW Box */
     lv_obj_t *box3 = lv_obj_create(cont_row);
     lv_obj_set_size(box3, 60, 60);
-    //lv_obj_align(box3, LV_ALIGN_LEFT_MID, 70*2, 0);
     lv_obj_set_style_bg_color(box3, lv_color_hex(0x22304d), 0);
     lv_obj_set_style_border_opa(box3, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(box3, LV_OBJ_FLAG_SCROLLABLE);
@@ -275,6 +281,7 @@ lv_obj_t* create_home(void){
 
     /* DEW Stat */
     lv_obj_t * label18 = lv_label_create(box3);
+    weather_labels.dew_point = label18;
     lv_label_set_text(label18, "65");
     lv_obj_add_style(label18, &stat_style, 0);
     lv_obj_align(label18, LV_ALIGN_CENTER, 0, 10);
@@ -282,7 +289,6 @@ lv_obj_t* create_home(void){
     /* WIND Box */
     lv_obj_t *box4 = lv_obj_create(cont_row);
     lv_obj_set_size(box4, 60, 60);
-    //lv_obj_align(box4, LV_ALIGN_LEFT_MID, 70*3, 0);
     lv_obj_set_style_bg_color(box4, lv_color_hex(0x22304d), 0);
     lv_obj_set_style_border_opa(box4, LV_OPA_TRANSP, 0);
     lv_obj_clear_flag(box4, LV_OBJ_FLAG_SCROLLABLE);
@@ -295,6 +301,7 @@ lv_obj_t* create_home(void){
 
     /* WIND Stat */
     lv_obj_t * label20 = lv_label_create(box4);
+    weather_labels.wind_speed = label20;
     lv_label_set_text(label20, "4m/s");
     lv_obj_add_style(label20, &stat_style, 0);
     lv_obj_align(label20, LV_ALIGN_CENTER, 0, 10);
@@ -314,6 +321,7 @@ lv_obj_t* create_home(void){
 
     /* DIR Stat */
     lv_obj_t * label22 = lv_label_create(box5);
+    weather_labels.wind_direction = label22;
     lv_label_set_text(label22, "NE");
     lv_obj_add_style(label22, &stat_style, 0);
     lv_obj_align(label22, LV_ALIGN_CENTER, 0, 10);
@@ -334,6 +342,7 @@ lv_obj_t* create_home(void){
 
     /* PRIC Stat */
     lv_obj_t * label24 = lv_label_create(box6);
+    weather_labels.precipitation = label24;
     lv_label_set_text(label24, "20%");
     lv_obj_add_style(label24, &stat_style, 0);
     lv_obj_align(label24, LV_ALIGN_CENTER, 0, 10);

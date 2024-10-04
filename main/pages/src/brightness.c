@@ -85,7 +85,7 @@ lv_obj_t* create_brightness(void){
     static lv_style_t text_style;
     lv_style_init(&text_style);
     lv_style_set_text_color(&text_style, lv_color_hex(0xFFFFFF));
-    lv_style_set_text_font(&text_style, &lv_font_montserrat_48);
+    lv_style_set_text_font(&text_style, &montserrat_48_cut);
     
 
     lv_obj_t * label1 = lv_label_create(btn1);
