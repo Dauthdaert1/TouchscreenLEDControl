@@ -44,8 +44,8 @@ Open project in the ui_controller directory:
 ```console
 ├── ui_controller/
 │   ├── src/           # Source code for UI controller
-│   └── README.md      # Details specific to UI controller
-└── README.md          # Main project overview (this file)
+│   └── README.md      # Details specific to UI controller (this file)
+└── README.md          # Main project overview 
 ```
 
 **Build the Project**
