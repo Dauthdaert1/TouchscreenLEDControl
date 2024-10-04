@@ -1,7 +1,7 @@
 # Touchscreen LED Control
 ## Author: Dauthdaert1
 ## High Level Description
-This is a project to control an LED strip using a touch LCD display. The LCD display has it's own microcontroller plugged in via USB so that it can be placed easily where the user wants it. The LED strip is controlled by it's own microcontroller as well. In the future, they will communicate with each other via bluetooth, but this is currently not implemented as I just split the project.
+This is a project to control an LED strip using a touch LCD display. The LCD display has it's own microcontroller plugged in via USB so that it can be placed easily where the user wants it. The LED strip is controlled by it's own microcontroller as well. In the future, they will communicate with each other via bluetooth, but this is currently not implemented as I just split the project to use 2 microcontrollers instead of 1.
 
 I have plans to make the system controllable by a mobile app but that's a while off.
 
