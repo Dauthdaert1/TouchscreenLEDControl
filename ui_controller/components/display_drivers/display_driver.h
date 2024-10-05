@@ -42,7 +42,7 @@
 #define DISPLAY_WIDTH   240
 #define DISPLAY_HEIGHT  240
 
-/* Frame buffers 1/10th the size of screen to reduce ram
+/* Default: Frame buffers 1/10th the size of screen to reduce ram
  * Multiply by 2 for 16 bit color mapping */
 #define BUFFER_SIZE 2*DISPLAY_WIDTH*DISPLAY_HEIGHT/10
 

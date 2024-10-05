@@ -57,6 +57,13 @@ Run the command:
 idf.py flash
 ```
 
+## Detailed Information on APIs
+Main code for driving LEDs:\
+[led_drivers](components/led_drivers/README.md)
+
+LED lower level drivers (encapsulated by led_drivers):\
+[espressif__led_strip](managed_components/espressif__led_strip/README.md)
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.

@@ -217,7 +217,7 @@ static uint32_t get_millis(){
     return (uint32_t) (esp_timer_get_time() / 1000);
 }
 
-void solid_color(){
+static void solid_color(){
     led_color_t out_color = {
         .red = display_config.color1.red * (strip_brightness/255.0),
         .green = display_config.color1.green * (strip_brightness/255.0),
@@ -231,14 +231,14 @@ void solid_color(){
     led_strip_refresh(led_strip);
 }
 
-void color_shift(){
+static void color_shift(){
 
 }
 
-void breathe(){
+static void breathe(){
 
 }
 
-void rainbow(){
+static void rainbow(){
 
 }

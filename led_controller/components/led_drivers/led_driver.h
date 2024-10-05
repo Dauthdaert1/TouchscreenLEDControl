@@ -17,6 +17,12 @@
 #define UPDATE_RATE_MS  50
 #define MAX_LIGHT_MODES 20
 
+/*===========*
+   Constants
+ *===========*/
+#define LED_STRIP_OFF   0
+#define LED_STRIP_ON    1
+
 /*==========*
    Typedefs
  *==========*/

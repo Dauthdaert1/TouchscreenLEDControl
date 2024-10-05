@@ -25,6 +25,9 @@ The purpose of this section is to show the UI on the circular touchscreen module
 * LVGL
 * Custom LCD Driver for Touch Display (included)
 
+#### Documentation of Custom Drivers
+[Driver README](components/display_drivers/README.md)
+
 ## Installation Instructions
 **Clone the Repository**
 
@@ -48,13 +51,19 @@ Open project in the ui_controller directory:
 └── README.md          # Main project overview 
 ```
 
+**Update Template**
+
+In the wifi manager component, copy [wifi_info_template.h](components/wifi_manager/wifi_info_template.h) and fill with your information.
+
 **Build the Project**
+
 Either use the ESP-IDF menu on the left, or type into console:
 ```console
 idf.py build
 ```
 
 **Flash to Microcontroller**
+
 Run the command:
 ```console
 idf.py flash

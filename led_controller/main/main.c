@@ -42,7 +42,7 @@ void app_main(void)
     append_mode(&mode2);
     set_mode_index(1);
 
-    set_strip_power(1);
+    set_strip_power(LED_STRIP_ON);
 
     while (true)
     {
