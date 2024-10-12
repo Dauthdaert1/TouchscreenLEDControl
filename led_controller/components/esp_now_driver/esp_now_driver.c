@@ -25,14 +25,18 @@ static uint8_t channel;
 static const char *TAG = "espnow_example";
 
 static QueueHandle_t s_example_espnow_queue;
+static TaskHandle_t xScanHandle = NULL;
 
 static uint8_t s_example_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 static uint16_t s_example_espnow_seq[EXAMPLE_ESPNOW_DATA_MAX] = { 0, 0 };
 
+static esp_err_t espnow_init(void);
 static void example_espnow_deinit(example_espnow_send_param_t *send_param);
+static void wifi_scan_done_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+static void periodic_scan();
 
 /* WiFi should start before using ESPNOW */
-static void example_wifi_init(void)
+static void wifi_init(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -41,23 +45,138 @@ static void example_wifi_init(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
     ESP_ERROR_CHECK( esp_wifi_start());
-    //ESP_ERROR_CHECK( esp_wifi_set_channel(CONFIG_ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE));
-
-    //Need to find channel num before connecting
-    // Configure the scan parameters
-    wifi_scan_config_t scan_config = {
-        .ssid = 0,  // Scan all SSIDs
-        .bssid = 0,
-        .channel = 0,  // Scan all channels
-        .show_hidden = false
-    };
 
     // Start scanning
-    ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, false));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &wifi_scan_done_handler, NULL, NULL));
+    xTaskCreate(&periodic_scan, "WifiScan", 2048, NULL, 5, &xScanHandle);
+}
 
-#if CONFIG_ESPNOW_ENABLE_LONG_RANGE
-    ESP_ERROR_CHECK( esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR) );
+/** 
+ * Periodically scan wifi for Access Point
+*/
+static void periodic_scan(){
+    while(1){
+        //Need to find channel num of AP before connecting
+        // Configure the scan parameters
+        ESP_LOGI(TAG, "Scanning for Access Point");
+
+        wifi_scan_config_t scan_config = {
+            .ssid = 0,  // Scan all SSIDs
+            .bssid = 0,
+            .channel = 0,  // Scan all channels
+            .show_hidden = false
+        };
+
+        ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, false));
+
+        //Scan every 10 seconds
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+    }
+}
+
+/**
+ * Check if scan found correct network, change channel and end task periodic scanning if so, else do nothing 
+ */
+static void wifi_scan_done_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    uint16_t number = 0;
+    esp_wifi_scan_get_ap_num(&number);  // Get number of scanned APs
+
+    wifi_ap_record_t ap_records[number];
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_records));  // Get scan results
+
+    // Iterate through the scan results and find the target SSID
+    bool found = false;
+    for (int i = 0; i < number; i++) {
+        if (strcmp((char*)ap_records[i].ssid, AP_SSID) == 0) {
+            ESP_LOGI(TAG, "Found SSID: %s on Channel: %d", ap_records[i].ssid, ap_records[i].primary);
+            channel = ap_records[i].primary;
+            found = true;
+            break;
+        }
+    }
+
+    esp_wifi_scan_stop();
+    esp_wifi_clear_ap_list();
+
+    if(found){
+        vTaskDelete(xScanHandle);
+        ESP_ERROR_CHECK( esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE));
+        esp_event_handler_instance_unregister(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &wifi_scan_done_handler);
+        espnow_init();  
+    }
+}
+
+
+/**
+ * Init ESP NOW when AP and channel are found
+ */
+static esp_err_t espnow_init(void)
+{
+    example_espnow_send_param_t *send_param;
+
+    s_example_espnow_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
+    if (s_example_espnow_queue == NULL) {
+        ESP_LOGE(TAG, "Create mutex fail");
+        return ESP_FAIL;
+    }
+
+    /* Initialize ESPNOW and register sending and receiving callback function. */
+    ESP_ERROR_CHECK( esp_now_init() );
+    ESP_ERROR_CHECK( esp_now_register_send_cb(example_espnow_send_cb) );
+    ESP_ERROR_CHECK( esp_now_register_recv_cb(example_espnow_recv_cb) );
+#if CONFIG_ESPNOW_ENABLE_POWER_SAVE
+    ESP_ERROR_CHECK( esp_now_set_wake_window(CONFIG_ESPNOW_WAKE_WINDOW) );
+    ESP_ERROR_CHECK( esp_wifi_connectionless_module_set_wake_interval(CONFIG_ESPNOW_WAKE_INTERVAL) );
 #endif
+    /* Set primary master key. */
+    ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)CONFIG_ESPNOW_PMK) );
+
+    /* Add broadcast peer information to peer list. */
+    esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
+    if (peer == NULL) {
+        ESP_LOGE(TAG, "Malloc peer information fail");
+        vSemaphoreDelete(s_example_espnow_queue);
+        esp_now_deinit();
+        return ESP_FAIL;
+    }
+    memset(peer, 0, sizeof(esp_now_peer_info_t));
+    peer->channel = channel;
+    peer->ifidx = ESPNOW_WIFI_IF;
+    peer->encrypt = false;
+    memcpy(peer->peer_addr, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
+    ESP_ERROR_CHECK( esp_now_add_peer(peer) );
+    free(peer);
+
+    /* Initialize sending parameters. */
+    send_param = malloc(sizeof(example_espnow_send_param_t));
+    if (send_param == NULL) {
+        ESP_LOGE(TAG, "Malloc send parameter fail");
+        vSemaphoreDelete(s_example_espnow_queue);
+        esp_now_deinit();
+        return ESP_FAIL;
+    }
+    memset(send_param, 0, sizeof(example_espnow_send_param_t));
+    send_param->unicast = false;
+    send_param->broadcast = true;
+    send_param->state = 0;
+    send_param->magic = esp_random();
+    send_param->count = CONFIG_ESPNOW_SEND_COUNT;
+    send_param->delay = CONFIG_ESPNOW_SEND_DELAY;
+    send_param->len = CONFIG_ESPNOW_SEND_LEN;
+    send_param->buffer = malloc(CONFIG_ESPNOW_SEND_LEN);
+    if (send_param->buffer == NULL) {
+        ESP_LOGE(TAG, "Malloc send buffer fail");
+        free(send_param);
+        vSemaphoreDelete(s_example_espnow_queue);
+        esp_now_deinit();
+        return ESP_FAIL;
+    }
+    memcpy(send_param->dest_mac, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
+    example_espnow_data_prepare(send_param);
+
+    xTaskCreate(example_espnow_task, "example_espnow_task", 2048, send_param, 4, NULL);
+
+    return ESP_OK;
 }
 
 /* ESPNOW sending or receiving callback function is called in WiFi task.
@@ -180,6 +299,7 @@ static void example_espnow_task(void *pvParameter)
         vTaskDelete(NULL);
     }
 
+    //xQueueReceive sends task to blocked for 10 ticks if not available
     while (xQueueReceive(s_example_espnow_queue, &evt, portMAX_DELAY) == pdTRUE) {
         switch (evt.id) {
             case EXAMPLE_ESPNOW_SEND_CB:
@@ -298,107 +418,12 @@ static void example_espnow_task(void *pvParameter)
     }
 }
 
-static esp_err_t example_espnow_init(void)
-{
-    example_espnow_send_param_t *send_param;
-
-    s_example_espnow_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
-    if (s_example_espnow_queue == NULL) {
-        ESP_LOGE(TAG, "Create mutex fail");
-        return ESP_FAIL;
-    }
-
-    /* Initialize ESPNOW and register sending and receiving callback function. */
-    ESP_ERROR_CHECK( esp_now_init() );
-    ESP_ERROR_CHECK( esp_now_register_send_cb(example_espnow_send_cb) );
-    ESP_ERROR_CHECK( esp_now_register_recv_cb(example_espnow_recv_cb) );
-#if CONFIG_ESPNOW_ENABLE_POWER_SAVE
-    ESP_ERROR_CHECK( esp_now_set_wake_window(CONFIG_ESPNOW_WAKE_WINDOW) );
-    ESP_ERROR_CHECK( esp_wifi_connectionless_module_set_wake_interval(CONFIG_ESPNOW_WAKE_INTERVAL) );
-#endif
-    /* Set primary master key. */
-    ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)CONFIG_ESPNOW_PMK) );
-
-    /* Add broadcast peer information to peer list. */
-    esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
-    if (peer == NULL) {
-        ESP_LOGE(TAG, "Malloc peer information fail");
-        vSemaphoreDelete(s_example_espnow_queue);
-        esp_now_deinit();
-        return ESP_FAIL;
-    }
-    memset(peer, 0, sizeof(esp_now_peer_info_t));
-    peer->channel = channel;
-    peer->ifidx = ESPNOW_WIFI_IF;
-    peer->encrypt = false;
-    memcpy(peer->peer_addr, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
-    ESP_ERROR_CHECK( esp_now_add_peer(peer) );
-    free(peer);
-
-    /* Initialize sending parameters. */
-    send_param = malloc(sizeof(example_espnow_send_param_t));
-    if (send_param == NULL) {
-        ESP_LOGE(TAG, "Malloc send parameter fail");
-        vSemaphoreDelete(s_example_espnow_queue);
-        esp_now_deinit();
-        return ESP_FAIL;
-    }
-    memset(send_param, 0, sizeof(example_espnow_send_param_t));
-    send_param->unicast = false;
-    send_param->broadcast = true;
-    send_param->state = 0;
-    send_param->magic = esp_random();
-    send_param->count = CONFIG_ESPNOW_SEND_COUNT;
-    send_param->delay = CONFIG_ESPNOW_SEND_DELAY;
-    send_param->len = CONFIG_ESPNOW_SEND_LEN;
-    send_param->buffer = malloc(CONFIG_ESPNOW_SEND_LEN);
-    if (send_param->buffer == NULL) {
-        ESP_LOGE(TAG, "Malloc send buffer fail");
-        free(send_param);
-        vSemaphoreDelete(s_example_espnow_queue);
-        esp_now_deinit();
-        return ESP_FAIL;
-    }
-    memcpy(send_param->dest_mac, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
-    example_espnow_data_prepare(send_param);
-
-    xTaskCreate(example_espnow_task, "example_espnow_task", 2048, send_param, 4, NULL);
-
-    return ESP_OK;
-}
-
 static void example_espnow_deinit(example_espnow_send_param_t *send_param)
 {
     free(send_param->buffer);
     free(send_param);
     vSemaphoreDelete(s_example_espnow_queue);
     esp_now_deinit();
-}
-
-static void wifi_scan_done_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    uint16_t number = 0;
-    esp_wifi_scan_get_ap_num(&number);  // Get number of scanned APs
-
-    wifi_ap_record_t ap_records[number];
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_records));  // Get scan results
-
-    // Iterate through the scan results and find the target SSID
-    for (int i = 0; i < number; i++) {
-        if (strcmp((char*)ap_records[i].ssid, AP_SSID) == 0) {
-            ESP_LOGI(TAG, "Found SSID: %s on Channel: %d", ap_records[i].ssid, ap_records[i].primary);
-            channel = ap_records[i].primary;
-            
-            break;
-        }
-    }
-
-    
-    esp_wifi_scan_stop();
-    esp_wifi_clear_ap_list();
-    ESP_ERROR_CHECK( esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE));
-    esp_event_handler_instance_unregister(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &wifi_scan_done_handler);
-    example_espnow_init();
-
 }
 
 void esp_now_drivers_init(void)
@@ -411,10 +436,6 @@ void esp_now_drivers_init(void)
     }
     ESP_ERROR_CHECK( ret );
 
-    example_wifi_init();
-
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &wifi_scan_done_handler, NULL, NULL));
-
-
-    
+    //Initialize Wifi and start scanning
+    wifi_init();
 }
