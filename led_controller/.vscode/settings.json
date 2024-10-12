@@ -55,6 +55,8 @@
         "esp_timer.h": "c",
         "numbers": "c",
         "led_driver.h": "c",
-        "screen_manager.h": "c"
+        "screen_manager.h": "c",
+        "esp_mac.h": "c",
+        "esp_now.h": "c"
     }
 }

@@ -6,11 +6,14 @@
 #include "esp_log.h"
 #include "led_driver.h"
 #include "sdkconfig.h"
+#include "esp_now_driver.h"
 
 //static const char *TAG = "LED_STRIP";
 
 void app_main(void)
 {
+    esp_now_drivers_init();
+
     //Start LED Strip with 60 leds
     init_strip(60);
 

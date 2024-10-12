@@ -5,6 +5,6 @@ cmake_minimum_required(VERSION 3.16)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(StripExample)
 
-list(APPEND EXTRA_COMPONENT_DIRS "components/display_drivers" "components/led_drivers")
+list(APPEND EXTRA_COMPONENT_DIRS "components/esp_now_driver" "components/led_drivers")
 
 include_directories(${CMAKE_SOURCE_DIR})

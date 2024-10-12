@@ -38,7 +38,7 @@ git clone https://github.com/Dauthdaert1/TouchscreenLEDControl.git
 
 **Set Up the Environment**
 
-Ensure ESP-IDF is installed. This project was build with V5.2.2.
+Ensure ESP-IDF is installed. This project was build with V5.3.1.
 
 **Open Project in VSCode**
 

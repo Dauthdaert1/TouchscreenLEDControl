@@ -58,6 +58,11 @@
         "screen_manager.h": "c",
         "brightness.h": "c",
         "esp_http_client.h": "c",
-        "wifi_manager.h": "c"
+        "wifi_manager.h": "c",
+        "bluetooth_manager.h": "c",
+        "esp_gatts_api.h": "c",
+        "esp_bt_device.h": "c",
+        "esp_bt_main.h": "c",
+        "string.h": "c"
     }
 }
