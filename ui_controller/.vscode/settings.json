@@ -63,6 +63,14 @@
         "esp_gatts_api.h": "c",
         "esp_bt_device.h": "c",
         "esp_bt_main.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "esp_wifi.h": "c",
+        "assert.h": "c",
+        "esp_now.h": "c",
+        "time.h": "c",
+        "esp_mac.h": "c",
+        "timers.h": "c",
+        "esp_crc.h": "c",
+        "weather_info.h": "c"
     }
 }

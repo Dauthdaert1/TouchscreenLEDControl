@@ -13,7 +13,6 @@
 #include "brightness.h"
 #include "wifi_manager.h"
 #include "weather_info.h"
-#include "esp_now_driver.h"
 
 //static const char *TAG = "LED_STRIP";
 
@@ -35,16 +34,17 @@ void app_main(void)
 
     set_brightness(100);
 
-    //wifi_manager_init();
-    //wifi_manager_connect();
+    wifi_manager_init();
+    wifi_manager_connect();
+    espnow_init();
 
-    esp_now_drivers_init();
+    //esp_now_drivers_init();
 
     vTaskDelay(10000 / portTICK_PERIOD_MS);
 
     while (true)
     {
-        /*
+        
         fetch_weather_data();
         weather_data_t* weather_data = get_weather_data();
         weather_labels_t* weather_labels = get_weather_labels();
@@ -57,7 +57,7 @@ void app_main(void)
         lv_label_set_text_fmt(weather_labels->wind_speed, "%.1fm/s", weather_data->wind_speed);
         lv_label_set_text_fmt(weather_labels->wind_direction, "%d", weather_data->wind_direction);
         vTaskDelay(600000 / portTICK_PERIOD_MS);
-        */
+        
        vTaskDelay(600000 / portTICK_PERIOD_MS);
     }
 }
