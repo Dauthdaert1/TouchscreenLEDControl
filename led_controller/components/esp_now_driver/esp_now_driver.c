@@ -34,6 +34,11 @@ static esp_err_t espnow_init(void);
 static void example_espnow_deinit(example_espnow_send_param_t *send_param);
 static void wifi_scan_done_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 static void periodic_scan();
+static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status);
+void example_espnow_data_prepare(example_espnow_send_param_t *send_param);
+static void example_espnow_task(void *pvParameter);
+static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len);
+
 
 /* WiFi should start before using ESPNOW */
 static void wifi_init(void)

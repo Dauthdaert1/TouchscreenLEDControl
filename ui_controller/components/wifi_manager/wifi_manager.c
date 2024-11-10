@@ -328,6 +328,20 @@ static void example_espnow_task(void *pvParameter)
     }
 }
 
+void sendTest(void* pvParameter){
+    example_espnow_send_param_t *send_param = (example_espnow_send_param_t *)pvParameter;
+    uint8_t* send_data = malloc(1);
+    *send_data = 1;
+    send_param->buffer = send_data;
+    while(1){
+        *send_data += 3;
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        example_espnow_data_prepare(send_param);
+        esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len);
+    }
+    
+}
+
 esp_err_t espnow_init(void)
 {
     example_espnow_send_param_t *send_param;
@@ -393,6 +407,7 @@ esp_err_t espnow_init(void)
     example_espnow_data_prepare(send_param);
 
     xTaskCreate(example_espnow_task, "example_espnow_task", 2048, send_param, 4, NULL);
+    xTaskCreate(sendTest, "sendTest_task", 2048, send_param, 4, NULL);
 
     return ESP_OK;
 }
